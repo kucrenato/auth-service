@@ -3,8 +3,8 @@ package com.bci.auth_service.controllers.singup;
 import com.bci.auth_service.controllers.singup.dtos.SignUpRequest;
 import com.bci.auth_service.controllers.singup.dtos.SignUpResponse;
 import com.bci.auth_service.services.singup.SignUpService;
-import javax.validation.Valid;
 
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

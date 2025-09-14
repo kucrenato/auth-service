@@ -10,12 +10,12 @@ import com.bci.auth_service.errors.UserNotFoundException;
 import com.bci.auth_service.mappers.PhoneMapper;
 import com.bci.auth_service.repositories.UserRepository;
 import io.jsonwebtoken.Claims;
-import javax.servlet.http.HttpServletRequest;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,6 +54,10 @@ public class LoginServiceImpl implements LoginService {
         }
 
         UserEntity user = userByEmail.get();
+
+        // Persist last login
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
 
         List phoneResponses = null;
         if (user.getPhones() != null) {

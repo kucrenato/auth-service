@@ -31,7 +31,8 @@ public class SignUpServiceImpl implements SignUpService {
     @Override
     public SignUpResponse signUpUser(SignUpRequest signUpRequest) {
 
-        Optional<UserEntity> userByEmail = this.userRepository.findByEmail(signUpRequest.getEmail());
+        Optional<UserEntity> userByEmail = this.userRepository.findByEmail(
+            signUpRequest.getEmail());
         if (userByEmail.isPresent()) {
             throw new EmailAlreadyExistsException(
                 "Ya existe un usuario registrado con este correo");
@@ -67,7 +68,8 @@ public class SignUpServiceImpl implements SignUpService {
         return SignUpResponse.builder()
             .id(userEntity.getId())
             .created(userEntity.getCreated().toString())
-            .lastLogin(userEntity.getLastLogin())
+            .lastLogin(
+                userEntity.getLastLogin() != null ? userEntity.getLastLogin().toString() : null)
             .token(jwt)
             .isActive(userEntity.getIsActive())
             .build();

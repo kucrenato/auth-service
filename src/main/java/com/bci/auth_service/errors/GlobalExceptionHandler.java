@@ -44,7 +44,8 @@ public class GlobalExceptionHandler {
         EmailAlreadyExistsException ex) {
 
         ApiError error = new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage());
-        return new ResponseEntity<>(new ApiErrorResponse(Collections.singletonList(error)), HttpStatus.CONFLICT);
+        return new ResponseEntity<>(new ApiErrorResponse(Collections.singletonList(error)),
+            HttpStatus.CONFLICT);
     }
 
 }
