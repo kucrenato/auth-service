@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Maneja errores de validación @Valid
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationExceptions(
         MethodArgumentNotValidException ex) {
@@ -30,7 +29,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(new ApiErrorResponse(errors), HttpStatus.BAD_REQUEST);
     }
 
-    // Maneja errores genéricos
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiErrorResponse> handleRuntimeException(RuntimeException ex) {
 

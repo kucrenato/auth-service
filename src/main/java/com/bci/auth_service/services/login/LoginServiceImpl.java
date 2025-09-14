@@ -35,30 +35,44 @@ public class LoginServiceImpl implements LoginService {
 
     @Override
     public LoginResponse loginUser() {
+        HttpServletRequest request = this.getCurrentHttpRequest();
+        String email = this.extractEmailFromRequest(request);
+        UserEntity user = this.findUserByEmail(email);
+        this.updateLastLogin(user);
+        List phoneResponses = this.buildPhoneResponses(user);
+        String renewedToken = this.jwtUtil.generateToken(user.getId(), user.getEmail());
+        return this.buildLoginResponse(user, renewedToken, phoneResponses);
+    }
 
-        ServletRequestAttributes attr
-            = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    private HttpServletRequest getCurrentHttpRequest() {
+        ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attr == null) {
             throw new RequestContextNotFoundException();
         }
-        HttpServletRequest request = attr.getRequest();
+        return attr.getRequest();
+    }
+
+    private String extractEmailFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         String token = authHeader.substring(7);
         Claims claims = jwtUtil.parseToken(token);
-        String email = claims.get("email", String.class);
+        return claims.get("email", String.class);
+    }
 
+    private UserEntity findUserByEmail(String email) {
         Optional<UserEntity> userByEmail = this.userRepository.findByEmail(email);
-
         if (!userByEmail.isPresent()) {
             throw new UserNotFoundException();
         }
+        return userByEmail.get();
+    }
 
-        UserEntity user = userByEmail.get();
-
-        // Persist last login
+    private void updateLastLogin(UserEntity user) {
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
+    }
 
+    private List buildPhoneResponses(UserEntity user) {
         List phoneResponses = null;
         if (user.getPhones() != null) {
             phoneResponses = new ArrayList<>();
@@ -66,14 +80,15 @@ public class LoginServiceImpl implements LoginService {
                 phoneResponses.add(phoneMapper.phoneEntityToPhoneResponse(phoneEntity));
             }
         }
+        return phoneResponses;
+    }
 
-        String renewedToken = jwtUtil.generateToken(user.getId(), user.getEmail());
-
+    private LoginResponse buildLoginResponse(UserEntity user, String token, List phoneResponses) {
         return LoginResponse.builder()
             .id(user.getId())
             .created(user.getCreated())
             .lastLogin(LocalDateTime.now())
-            .token(renewedToken)
+            .token(token)
             .isActive(user.getIsActive())
             .name(user.getName())
             .email(user.getEmail())

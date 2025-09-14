@@ -30,15 +30,23 @@ public class SignUpServiceImpl implements SignUpService {
 
     @Override
     public SignUpResponse signUpUser(SignUpRequest signUpRequest) {
+        this.validateEmailNotExists(signUpRequest.getEmail());
+        UserEntity userEntity = this.buildUserEntity(signUpRequest);
+        this.setPhonesToUser(signUpRequest, userEntity);
+        this.userRepository.save(userEntity);
+        String jwt = this.jwtUtil.generateToken(userEntity.getId(), userEntity.getEmail());
+        return this.buildSignUpResponse(userEntity, jwt);
+    }
 
-        Optional<UserEntity> userByEmail = this.userRepository.findByEmail(
-            signUpRequest.getEmail());
+    private void validateEmailNotExists(String email) {
+        Optional<UserEntity> userByEmail = this.userRepository.findByEmail(email);
         if (userByEmail.isPresent()) {
-            throw new EmailAlreadyExistsException(
-                "Ya existe un usuario registrado con este correo");
+            throw new EmailAlreadyExistsException("Ya existe un usuario registrado con este correo");
         }
+    }
 
-        UserEntity userEntity = UserEntity.builder()
+    private UserEntity buildUserEntity(SignUpRequest signUpRequest) {
+        return UserEntity.builder()
             .id(UUID.randomUUID().toString())
             .name(signUpRequest.getName())
             .email(signUpRequest.getEmail())
@@ -46,7 +54,9 @@ public class SignUpServiceImpl implements SignUpService {
             .created(LocalDateTime.now())
             .isActive(true)
             .build();
+    }
 
+    private void setPhonesToUser(SignUpRequest signUpRequest, UserEntity userEntity) {
         List<PhoneEntity> phoneEntities = null;
         if (signUpRequest.getPhones() != null && !signUpRequest.getPhones().isEmpty()) {
             phoneEntities = new ArrayList<>();
@@ -61,15 +71,13 @@ public class SignUpServiceImpl implements SignUpService {
             }
             userEntity.setPhones(phoneEntities);
         }
+    }
 
-        this.userRepository.save(userEntity);
-        String jwt = jwtUtil.generateToken(userEntity.getId(), userEntity.getEmail());
-
+    private SignUpResponse buildSignUpResponse(UserEntity userEntity, String jwt) {
         return SignUpResponse.builder()
             .id(userEntity.getId())
             .created(userEntity.getCreated().toString())
-            .lastLogin(
-                userEntity.getLastLogin() != null ? userEntity.getLastLogin().toString() : null)
+            .lastLogin(userEntity.getLastLogin() != null ? userEntity.getLastLogin().toString() : null)
             .token(jwt)
             .isActive(userEntity.getIsActive())
             .build();
